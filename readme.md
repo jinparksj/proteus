@@ -1,6 +1,6 @@
 # Proteus Robotic Lab Automation
 
-* Idea on Proteus X-Y Plane
+* Idea on Proteus X-Y Plane as Top-view - IT IS JUST INTUITION from YOUTUBE CLIP about PROTEUS
 
 ![x_y_top_view](./img/x_y_top_view.png)
 

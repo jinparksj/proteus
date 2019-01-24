@@ -15,5 +15,17 @@ def fkine_DHtable(alphaList, aList, dList, thetaList):
         HTList[i] = HT
     return HTList
 
+if __name__ == "__main__":
+    a1 = 60
+    a2 = 30
+    d1 = "d1"
+    d2 = "d2"
+    d3 = "d3"
+    eelen = "end-effector length"
+
+    Alpha = [-90, -90, 90, 0]
+    a = [0, a1, a2, 0]
+    d = [d1, d2, d3, eelen]
+    Theta = [-90, -90, 0, 0]
 
 
