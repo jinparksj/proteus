@@ -1,0 +1,156 @@
+__author__ = "Sungjin Park (jinparksj@gmail.com)"
+
+from PyQt5.QtWidgets import QWidget, QTreeWidget, QPushButton, QTreeWidgetItem, QBoxLayout, QApplication
+from PyQt5.QtCore import QVariant, Qt
+
+
+import GUI_controller
+
+
+class ParentUI(QWidget):
+    HEADER = ["Source", "Target"]
+
+    def __init__(self):
+        QWidget.__init__(self, flags=Qt.Widget)
+        self.setWindowTitle("Select Source and Target")
+        self.setFixedWidth(600)
+        self.setFixedHeight(600)
+
+        #TreeWidget Source
+        self.source = QTreeWidget(self)
+        self.source.setColumnCount(1)
+        self.source.setHeaderLabels([self.HEADER[0]])
+
+        #TreeWidgets Target
+        self.target = QTreeWidget(self)
+        self.target.setColumnCount(1)
+        self.target.setHeaderLabels([self.HEADER[1]])
+
+        #Buttons
+        self.pb_move_left = QPushButton("<<<")
+        self.pb_move_right = QPushButton(">>>")
+        self.pb_previous = QPushButton("Previous")
+        self.pb_operate = QPushButton("Operate")
+        self.pb_up_source = QPushButton("∧")
+        self.pb_down_source = QPushButton("∨")
+        self.pb_up_target = QPushButton("∧")
+        self.pb_down_target = QPushButton("∨")
+
+
+        layout_up_down_source = QBoxLayout(QBoxLayout.TopToBottom)
+        layout_up_down_source.addWidget(self.pb_up_source)
+        layout_up_down_source.addWidget(self.pb_down_source)
+
+        layout_up_down_target = QBoxLayout(QBoxLayout.TopToBottom)
+        layout_up_down_target.addWidget(self.pb_up_target)
+        layout_up_down_target.addWidget(self.pb_down_target)
+
+        layout = QBoxLayout(QBoxLayout.LeftToRight)
+        layout.addLayout(layout_up_down_source)
+        layout.addWidget(self.source)
+        layout.addWidget(self.target)
+        layout.addLayout(layout_up_down_target)
+
+        button_layout = QBoxLayout(QBoxLayout.LeftToRight)
+        button_layout.addWidget(self.pb_previous)
+        button_layout.addWidget(self.pb_move_right)
+        button_layout.addWidget(self.pb_move_left)
+        button_layout.addWidget(self.pb_operate)
+
+        main_layout = QBoxLayout(QBoxLayout.TopToBottom)
+        main_layout.addLayout(layout)
+        main_layout.addLayout(button_layout)
+
+        self.setLayout(main_layout)
+
+
+class SourceTarget(ParentUI):
+    def __init__(self):
+        ParentUI.__init__(self)
+        #NEED TO GET DATA from GUI_Controller
+        data = GUI_controller.CHECKEDLIST
+        parent = QTreeWidget.invisibleRootItem(self.source)
+        for d in data:
+            item = self.make_tree_item(d)
+            parent.addChild(item)
+
+        self.pb_move_right.clicked.connect(self.move_item)
+        self.pb_move_left.clicked.connect(self.move_item)
+
+        self.windows = list()
+        self.pb_previous.clicked.connect(self.previousGUI)
+        self.pb_up_source.clicked.connect(self.move_up_down)
+        self.pb_down_source.clicked.connect(self.move_up_down)
+        self.pb_up_target.clicked.connect(self.move_up_down)
+        self.pb_down_target.clicked.connect(self.move_up_down)
+
+
+
+    def move_up_down(self):
+        sender = self.sender()
+        if self.pb_up_source == sender:
+            current_tw = self.source
+        elif self.pb_down_source == sender:
+            current_tw = self.source
+        elif self.pb_up_target == sender:
+            current_tw = self.target
+        elif self.pb_down_target == sender:
+            current_tw = self.target
+
+        index_item = None
+        item = None
+        current = None
+        auto_selected_item = None
+
+
+        item = current_tw.currentItem()
+        current = QTreeWidget.invisibleRootItem(current_tw)
+        index_item = current.indexOfChild(item)
+        auto_selected_item = current.child(index_item + 1)
+        current.removeChild(item)
+        current.insertChild(index_item-1, item)
+        auto_selected_item.setSelected(False)
+        item.setSelected(True)
+
+
+
+
+
+
+
+
+
+
+    def previousGUI(self):
+        window = GUI_controller.Controller()
+        self.windows.append(window)
+        GUI_controller.CHECKEDLIST = []
+        self.close()
+        window.show()
+
+    @classmethod
+    def make_tree_item(cls, name:str):
+        item = QTreeWidgetItem()
+        item.setText(0, name)
+        return item
+
+    def move_item(self):
+        sender = self.sender()
+        if self.pb_move_right == sender:
+            source_tw = self.source
+            target_tw = self.target
+        elif self.pb_move_left == sender:
+            source_tw = self.target
+            target_tw = self.source
+
+        item = source_tw.currentItem()
+        source = QTreeWidget.invisibleRootItem(source_tw)
+        source.removeChild(item)
+
+        target = QTreeWidget.invisibleRootItem(target_tw)
+        target.addChild(item)
+
+        # if source_tw == self.source:
+        #     target_tw.currentItem()
+
+

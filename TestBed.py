@@ -1,3 +1,5 @@
+__author__ = "Sungjin Park (jinparksj@gmail.com)"
+
 import sys
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QBoxLayout
