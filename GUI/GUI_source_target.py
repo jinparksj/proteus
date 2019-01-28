@@ -1,10 +1,13 @@
 __author__ = "Sungjin Park (jinparksj@gmail.com)"
 
-from PyQt5.QtWidgets import QWidget, QTreeWidget, QPushButton, QTreeWidgetItem, QBoxLayout, QApplication
-from PyQt5.QtCore import QVariant, Qt
+from PyQt5.QtWidgets import QWidget, QTreeWidget, QPushButton, QTreeWidgetItem, QBoxLayout
+from PyQt5.QtCore import Qt
 
+from GUI import GUI_controller
+from GUI import GUI_order
 
-import GUI_controller
+SOURCELIST = []
+TARGETLIST = []
 
 
 class ParentUI(QWidget):
@@ -30,7 +33,7 @@ class ParentUI(QWidget):
         self.pb_move_left = QPushButton("<<<")
         self.pb_move_right = QPushButton(">>>")
         self.pb_previous = QPushButton("Previous")
-        self.pb_operate = QPushButton("Operate")
+        self.pb_next = QPushButton("Next")
         self.pb_up_source = QPushButton("∧")
         self.pb_down_source = QPushButton("∨")
         self.pb_up_target = QPushButton("∧")
@@ -55,7 +58,7 @@ class ParentUI(QWidget):
         button_layout.addWidget(self.pb_previous)
         button_layout.addWidget(self.pb_move_right)
         button_layout.addWidget(self.pb_move_left)
-        button_layout.addWidget(self.pb_operate)
+        button_layout.addWidget(self.pb_next)
 
         main_layout = QBoxLayout(QBoxLayout.TopToBottom)
         main_layout.addLayout(layout)
@@ -69,6 +72,7 @@ class SourceTarget(ParentUI):
         ParentUI.__init__(self)
         #NEED TO GET DATA from GUI_Controller
         data = GUI_controller.CHECKEDLIST
+        self.total_ind_len = len(data)
         parent = QTreeWidget.invisibleRootItem(self.source)
         for d in data:
             item = self.make_tree_item(d)
@@ -83,11 +87,18 @@ class SourceTarget(ParentUI):
         self.pb_down_source.clicked.connect(self.move_up_down)
         self.pb_up_target.clicked.connect(self.move_up_down)
         self.pb_down_target.clicked.connect(self.move_up_down)
+        self.pb_next.clicked.connect(self.pushButtonNext)
 
 
-
+    #NEED TO FIX
     def move_up_down(self):
         sender = self.sender()
+
+        index_item = None
+        item = None
+        current = None
+        auto_selected_item = None
+
         if self.pb_up_source == sender:
             current_tw = self.source
         elif self.pb_down_source == sender:
@@ -97,29 +108,48 @@ class SourceTarget(ParentUI):
         elif self.pb_down_target == sender:
             current_tw = self.target
 
-        index_item = None
-        item = None
-        current = None
-        auto_selected_item = None
-
-
         item = current_tw.currentItem()
-        current = QTreeWidget.invisibleRootItem(current_tw)
-        index_item = current.indexOfChild(item)
-        auto_selected_item = current.child(index_item + 1)
-        current.removeChild(item)
-        current.insertChild(index_item-1, item)
-        auto_selected_item.setSelected(False)
-        item.setSelected(True)
 
+        if item.isSelected() and (self.pb_up_source == sender or self.pb_up_target == sender):
+            current = QTreeWidget.invisibleRootItem(current_tw)
+            index_item = current.indexOfChild(item)
+            current.removeChild(item)
+            # auto_selected_item = current.child((index_item - 1) % self.total_ind_len)
+            current.insertChild((index_item - 1) % self.total_ind_len, item)
+            selected_items = current_tw.selectedItems()
+            for item in selected_items:
+                item.setSelected(False)
 
+        elif item.isSelected() and (self.pb_down_source == sender or self.pb_down_target == sender):
+            current = QTreeWidget.invisibleRootItem(current_tw)
+            index_item = current.indexOfChild(item)
+            current.removeChild(item)
+            # auto_selected_item = current.child((index_item - 1) % self.total_ind_len)
+            current.insertChild((index_item + 1) % self.total_ind_len, item)
+            selected_items = current_tw.selectedItems()
+            for item in selected_items:
+                item.setSelected(False)
 
+    def TWtoList(self, tw, LIST):
+        item = True
+        while item != None:
+            item = tw.takeTopLevelItem(tw.currentColumn())
+            if item == None:
+                break
+            str_item = item.text(0)
+            LIST.append(str_item)
 
+    def pushButtonNext(self):
+        ###################################################
+        #SHOULD BE ACTIVATED BOTH TW!!!!!!!!! setselected!#
+        ###################################################
+        self.TWtoList(self.source, SOURCELIST)
+        self.TWtoList(self.target, TARGETLIST)
 
-
-
-
-
+        nextwindow = GUI_order.OrderProcess()
+        self.windows.append(nextwindow)
+        self.close()
+        nextwindow.show()
 
     def previousGUI(self):
         window = GUI_controller.Controller()
@@ -149,6 +179,8 @@ class SourceTarget(ParentUI):
 
         target = QTreeWidget.invisibleRootItem(target_tw)
         target.addChild(item)
+
+        item.setSelected(False)
 
         # if source_tw == self.source:
         #     target_tw.currentItem()

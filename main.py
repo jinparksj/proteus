@@ -24,7 +24,7 @@ from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtSerialPort import QSerialPort
 from PyQt5.QtSerialPort import QSerialPortInfo
 
-from GUI_controller import main
+from GUI.GUI_controller import main
 
 if __name__ == "__main__":
     main()

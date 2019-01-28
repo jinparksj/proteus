@@ -1,34 +1,21 @@
 __author__ = "Sungjin Park (jinparksj@gmail.com)"
 
 import sys
-from PyQt5.QtWidgets import QWidget, QMainWindow
+from PyQt5.QtWidgets import QWidget
 from PyQt5.QtWidgets import QBoxLayout
-from PyQt5.QtWidgets import QGridLayout
 from PyQt5.QtWidgets import QLabel
-from PyQt5.QtWidgets import QComboBox
 from PyQt5.QtWidgets import QGroupBox
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QTextEdit
 from PyQt5.QtWidgets import QPushButton
-from PyQt5.QtWidgets import QCheckBox
 
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtCore import QThread
-from PyQt5.QtCore import QIODevice
-from PyQt5.QtCore import QWaitCondition
-from PyQt5.QtCore import QMutex
-from PyQt5.QtCore import QByteArray
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtCore import pyqtSlot
-
-from PyQt5.QtSerialPort import QSerialPort
-from PyQt5.QtSerialPort import QSerialPortInfo
 
 
-from TestBed import SmallBed, LargeBed, MiddleBed
-from SensorChip import SensorChipAssay
-from GUI_source_target import SourceTarget
+
+from GUI.TestBed import SmallBed, LargeBed, MiddleBed
+from GUI.SensorChip import SensorChipAssay
+from GUI.GUI_source_target import SourceTarget
 
 CHECKEDLIST = []
 
@@ -62,6 +49,9 @@ class Controller(QWidget):
         self.pb_uncheck_all = QPushButton("Uncheck All")
         self.bed = Bed()
         self.sensor = SensorChipAssay()
+        self.instruction1 = QLabel("Check vials or sensors using for test")
+        self.instruction2 = QLabel("1. Uncheck All: Make all checkboxes unchecked")
+        self.instruction3 = QLabel("2. Next: Go next stage to decide sources or targets with checked samples")
         self.windows = list()
         self.init_widget()
 
@@ -73,6 +63,10 @@ class Controller(QWidget):
         sensor_lbx = QBoxLayout(QBoxLayout.LeftToRight, parent=self)
         button_lbx = QBoxLayout(QBoxLayout.LeftToRight, parent=self)
         self.setLayout(form_lbx)
+
+        form_lbx.addWidget(self.instruction1)
+        form_lbx.addWidget(self.instruction2)
+        form_lbx.addWidget(self.instruction3)
 
         form_lbx.addLayout(sensor_lbx)
         sensor_lbx.addWidget(self.sensor)
