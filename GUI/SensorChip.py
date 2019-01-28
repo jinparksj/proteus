@@ -18,7 +18,7 @@ class SensorChipAssay(QWidget):
         self.init_widget()
 
     def init_widget(self):
-        layout = QBoxLayout(QBoxLayout.RightToLeft, parent=self)
+        layout = QBoxLayout(QBoxLayout.LeftToRight, parent=self)
         self.setLayout(layout)
 
         for i in range(6):

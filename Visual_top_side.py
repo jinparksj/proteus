@@ -2,14 +2,22 @@ __author__ = "Sungjin Park (jinparksj@gmail.com)"
 
 import cv2
 import numpy as np
+import time
+import sys
+
+from PyQt5.QtWidgets import QWidget, QApplication
+from PyQt5.QtCore import Qt
+
 from GUI import GUI_order
+from GUI import GUI_controller
+
 
 SOURCE_LIST = []
 TARGET_LIST = []
 
 SCALE = 1.5
 
-WORKSPACE_HEIGHT = 500  * SCALE
+WORKSPACE_HEIGHT = 500 * SCALE
 WORKSPACE_WIDTH = 700 * SCALE
 
 MARGIN = 80 * SCALE
@@ -47,6 +55,10 @@ GAP_ASSAY = 50 * SCALE
 
 A2 = 30 * SCALE
 
+WORKPOINT_DICT = {}
+WORKPROCESS_LIST = []
+
+STEP = 5
 
 class Workspace(object):
     def __init__(self):
@@ -76,11 +88,10 @@ class Workspace(object):
 
         #Vials
         #1. Mid
-
         for i in range(1, 11): #i: row, y
             for j in range(1, 9): #j: col, x
                 x = mid_lefttop[0] + int(MID_GAP + MIDVIAL_RADIUS) * j
-                y = mid_lefttop[1] + int(MIDBEDSIZE_HEIGHT) - int(MID_GAP + MIDVIAL_RADIUS) * i
+                y = mid_lefttop[1] + int(MID_GAP + MIDVIAL_RADIUS) * i
                 cv2.circle(self.workspace, (x, y), int(MIDVIAL_RADIUS), (0, 0, 0))
                 MID_VIAL_LIST.append([y, x])
                 MID_VIAL_DICT.update({'mid_{}_{}'.format(i-1, j-1) : [y, x]})
@@ -89,7 +100,7 @@ class Workspace(object):
         for i in range(1, 9): #i: row, y
             for j in range(1, 9): #j: col, x
                 x = large_lefttop[0] + int(LARGE_GAP + LARGEVIAL_RADIUS) * j
-                y = large_lefttop[1] + int(LARGEBEDSIZE_HEIGHT) - int(LARGE_GAP + LARGEVIAL_RADIUS) * i
+                y = large_lefttop[1] + int(LARGE_GAP + LARGEVIAL_RADIUS) * i
                 cv2.circle(self.workspace, (x, y), int(LARGEVIAL_RADIUS), (0, 0, 0))
                 LARGE_VIAL_LIST.append([y, x])
                 LARGE_VIAL_DICT.update({'large_{}_{}'.format(i-1, j-1): [y, x]})
@@ -98,7 +109,7 @@ class Workspace(object):
         for i in range(1, 13): #i: row, y
             for j in range(1, 9): #j: col, x
                 x = small_lefttop[0] + int(SMALL_GAP + SMALLVIAL_RADIUS) * j
-                y = small_lefttop[1] + int(SMALLBEDSIZE_HEIGHT) - int(SMALL_GAP + SMALLVIAL_RADIUS) * i
+                y = small_lefttop[1] + int(SMALL_GAP + SMALLVIAL_RADIUS) * i
                 cv2.circle(self.workspace, (x, y), int(SMALLVIAL_RADIUS), (0, 0, 0))
                 SMALL_VIAL_LIST.append([y, x])
                 SMALL_VIAL_DICT.update({'small_{}_{}'.format(i-1, j-1): [y, x]})
@@ -119,40 +130,120 @@ class Workspace(object):
             for i in range(1, 9):
                 for j in range(1, 3):
                     x = self.sensor_lefttop_list[k][0] + int(SENSOR_GAP + SENSOR_RADIUS) * j
-                    y = self.sensor_lefttop_list[k][1] + int(SENSOR_HEIGHT) - int(SENSOR_GAP + SENSOR_RADIUS) * i
+                    y = self.sensor_lefttop_list[k][1] + int(SENSOR_GAP + SENSOR_RADIUS) * i
                     cv2.circle(self.workspace, (x, y), int(SENSOR_RADIUS), (0, 0, 0))
                     SENSOR_VIAL_LIST.append([k, y, x])
-                    SENSOR_VIAL_DICT.update({'sensor_{}_{}_{}'.format(k, i-1, j-1): [k, y, x]})
+                    SENSOR_VIAL_DICT.update({'sensor_{}_{}_{}'.format(k, i-1, j-1): [y, x]})
 
 
 
 class RoboticArm(Workspace):
     def __init__(self):
         super(RoboticArm, self).__init__()
+
         link1_point1 = (int(WORKSPACE_WIDTH - MARGIN), int(MARGIN))
         link1_point2 = (int(WORKSPACE_WIDTH - MARGIN), int(WORKSPACE_HEIGHT - MARGIN))
         cv2.line(self.workspace, link1_point1, link1_point2, (255, 0, 0), 20) #B G R
 
         link2_point1 = (int(MARGIN), int(MARGIN))
         link2_point2 = (int(WORKSPACE_WIDTH - MARGIN), int(MARGIN))
-        cv2.line(self.workspace, link2_point1, link2_point2, (0, 255, 0), 20)
+        # cv2.line(self.workspace, link2_point1, link2_point2, (0, 255, 0), 20)
 
         link3_point1 = (int(WORKSPACE_WIDTH - MARGIN), int(MARGIN))
         link3_point2 = (int(WORKSPACE_WIDTH - MARGIN), int(MARGIN + A2))
-        cv2.line(self.workspace, link3_point1, link3_point2, (0, 0, 255), 20)
-        cv2.circle(self.workspace, (link3_point2), int(SENSOR_RADIUS), 10)
+        # cv2.line(self.workspace, link3_point1, link3_point2, (0, 0, 255), 20)
+        # cv2.circle(self.workspace, link3_point2, int(SENSOR_RADIUS), 10)
 
+        self.p_start = [link3_point2[0], link3_point2[1]] #[x, y]
+        self.SourceTargetToPoint()
+        self.visualization()
 
+    def SourceTargetToPoint(self):
+        sourcetargetdict = GUI_order.SOURCE_TARGET_AMOUNT_DICT
+        for source in sourcetargetdict:
+            if source in MID_VIAL_DICT:
+                p_source = MID_VIAL_DICT[source]
+            elif source in LARGE_VIAL_DICT:
+                p_source = LARGE_VIAL_DICT[source]
+            elif source in SMALL_VIAL_DICT:
+                p_source = SMALL_VIAL_DICT[source]
+            elif source in SENSOR_VIAL_DICT:
+                p_source = SENSOR_VIAL_DICT[source]
+            for target in sourcetargetdict[source]:
+                key_target = target[0]
+                amount_target = target[1]
+                if key_target in MID_VIAL_DICT:
+                    p_target = MID_VIAL_DICT[key_target]
+                elif key_target in LARGE_VIAL_DICT:
+                    p_target = LARGE_VIAL_DICT[key_target]
+                elif key_target in SMALL_VIAL_DICT:
+                    p_target = SMALL_VIAL_DICT[key_target]
+                elif key_target in SENSOR_VIAL_DICT:
+                    p_target = SENSOR_VIAL_DICT[key_target]
 
+                WORKPROCESS_LIST.append([p_source, p_target, amount_target])
 
+    def visualization(self):
+        p_start = self.p_start.copy()
+        link2_x1 = int(MARGIN)
+        link2_x2 = int(WORKSPACE_WIDTH - MARGIN)
 
-        cv2.imshow("Workspace", self.workspace)
+        work_y = int(MARGIN)
+        work_x = int(WORKSPACE_WIDTH - MARGIN)
 
+        dstImg = self.workspace.copy()
+        amount = 0.0001
+        for worklist in WORKPROCESS_LIST: #[y, x] for worklist
+            for i in range(len(worklist) - 1):
+                time.sleep(0.5 * amount)
+                y_movement = worklist[i][0] - work_y - A2
+                y_step = y_movement / STEP
+
+                x_movement = worklist[i][1] - work_x
+                x_step = x_movement / STEP
+                # time.sleep(amount * 0.2)
+                amount = worklist[2]
+
+                for j in range(STEP):
+
+                    work_y = int(work_y + y_step)
+                    work_x = int(work_x + x_step)
+                    link3_y1 = int(work_y)
+                    link3_y2 = int(work_y + A2)
+
+                    cv2.line(dstImg, (link2_x1, work_y), (link2_x2, work_y), (0, 255, 0), 20)
+                    cv2.line(dstImg, (work_x, link3_y1), (work_x, link3_y2), (0, 0, 255), 10)
+                    cv2.circle(dstImg, (work_x, link3_y2), int(SENSOR_RADIUS), 5)
+                    if j == STEP - 1:
+                        cv2.circle(dstImg, (worklist[i][1], worklist[i][0]), int(SENSOR_RADIUS + 1), (255, 0, 0), -1)
+                    cv2.imshow("dstImg", dstImg)
+                    dstImg = self.workspace.copy()
+                    time.sleep(0.7)
+
+                    cv2.waitKey(30)
+
+        time.sleep(3)
+
+        BackToFirst()
+
+class BackToFirst(QWidget):
+    def __init__(self):
+        QWidget.__init__(self, flags=Qt.Widget)
+        self.windows = list()
+        self.back_to_first()
+
+    def back_to_first(self):
+        app = QApplication(sys.argv)
+        window = GUI_controller.Controller()
+        self.windows.append(window)
+        GUI_controller.CHECKEDLIST = []
+        window.show()
+        exit(app.exec_())
 
 
 def main():
     space = RoboticArm()
-    cv2.waitKey()
+
 
 if __name__ == "__main__":
     main()

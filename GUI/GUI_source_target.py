@@ -143,8 +143,10 @@ class SourceTarget(ParentUI):
         ###################################################
         #SHOULD BE ACTIVATED BOTH TW!!!!!!!!! setselected!#
         ###################################################
+
         self.TWtoList(self.source, SOURCELIST)
         self.TWtoList(self.target, TARGETLIST)
+
 
         nextwindow = GUI_order.OrderProcess()
         self.windows.append(nextwindow)
@@ -173,16 +175,22 @@ class SourceTarget(ParentUI):
             source_tw = self.target
             target_tw = self.source
 
-        item = source_tw.currentItem()
+        item_source = source_tw.currentItem()
         source = QTreeWidget.invisibleRootItem(source_tw)
-        source.removeChild(item)
+        source.removeChild(item_source)
 
         target = QTreeWidget.invisibleRootItem(target_tw)
-        target.addChild(item)
+        target.addChild(item_source)
 
-        item.setSelected(False)
+        item_source = source_tw.currentItem()
+        item_source.setSelected(False)
 
-        # if source_tw == self.source:
-        #     target_tw.currentItem()
+        top_item_source = source_tw.topLevelItem(0)
+        top_item_target = target_tw.topLevelItem(0)
+
+        top_item_source.setSelected(True)
+        top_item_target.setSelected(True)
+        source_tw.setCurrentItem(top_item_source)
+        target_tw.setCurrentItem(top_item_target)
 
 

@@ -8,10 +8,7 @@ from PyQt5.QtWidgets import QGroupBox
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QPushButton
 
-
 from PyQt5.QtCore import Qt
-
-
 
 from GUI.TestBed import SmallBed, LargeBed, MiddleBed
 from GUI.SensorChip import SensorChipAssay
