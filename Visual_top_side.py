@@ -273,17 +273,6 @@ class RoboticArm(Workspace):
         time.sleep(3)
         exit()
 
-class BackToFirst(QWidget):
-    def __init__(self):
-        QWidget.__init__(self, flags=Qt.Widget)
-        self.gui_windows = list()
-        self.back_to_first()
-
-    def back_to_first(self):
-        app = QApplication('/home/jin/project/proteus/loop_main.py')
-        exit(app.exec())
-
-
 def main():
     space = RoboticArm()
 
