@@ -29,3 +29,24 @@
     * y = a2 + d1
     * z = a1 - d3 - d4
     * d1 - joint 1, d2 - joint 2, d3 - joint 3, d4 - end-effector length
+    
+* GUI1: Choose Samples for Test
+
+![gui1](./img/gui1.png)
+
+* GUI2: Select Source and Target from Checked Samples
+
+![gui2](./img/gui2.png)
+
+* GUI3: Select Targeted Amount for Testing 
+
+![gui3](./img/gui3.png)
+
+* Simulation 1: Top View of Workspace 
+
+![sim1](./img/simulation1.png)
+
+* Simulation 2: Side View of Workspace 
+
+![sim2](./img/simulation2.png)
+
