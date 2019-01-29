@@ -6,7 +6,9 @@ import time
 
 
 if __name__ == "__main__":
-    print("Start Proteus")
+    print("Start Proteus GUI")
     print("Author: Sungjin Park (jinparksj@gmail.com)")
-    time.sleep(1)
+    print("Interview for GeneFluidics")
+    print("GUI + Simulation of X-Y plane")
+    time.sleep(2)
     main()

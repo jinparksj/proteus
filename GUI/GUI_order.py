@@ -88,7 +88,6 @@ class OrderProcess(OrderUI):
             SOURCE_TARGET_AMOUNT_DICT.update({source: TARGET_AMOUNT_LIST})
 
         self.close()
-        self.tw.close()
         Visual_top_side.main()
 
 

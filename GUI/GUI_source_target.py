@@ -130,6 +130,15 @@ class SourceTarget(ParentUI):
             for item in selected_items:
                 item.setSelected(False)
 
+        top_item_source = self.source.topLevelItem(0)
+        top_item_target = self.target.topLevelItem(0)
+
+        top_item_source.setSelected(True)
+        top_item_target.setSelected(True)
+        self.source.setCurrentItem(top_item_source)
+        self.target.setCurrentItem(top_item_target)
+
+
     def TWtoList(self, tw, LIST):
         item = True
         while item != None:
@@ -140,9 +149,6 @@ class SourceTarget(ParentUI):
             LIST.append(str_item)
 
     def pushButtonNext(self):
-        ###################################################
-        #SHOULD BE ACTIVATED BOTH TW!!!!!!!!! setselected!#
-        ###################################################
 
         self.TWtoList(self.source, SOURCELIST)
         self.TWtoList(self.target, TARGETLIST)
@@ -183,14 +189,16 @@ class SourceTarget(ParentUI):
         target.addChild(item_source)
 
         item_source = source_tw.currentItem()
-        item_source.setSelected(False)
+        if item_source != None:
+            item_source.setSelected(False)
 
         top_item_source = source_tw.topLevelItem(0)
         top_item_target = target_tw.topLevelItem(0)
-
-        top_item_source.setSelected(True)
-        top_item_target.setSelected(True)
-        source_tw.setCurrentItem(top_item_source)
-        target_tw.setCurrentItem(top_item_target)
+        if top_item_source != None:
+            top_item_source.setSelected(True)
+            source_tw.setCurrentItem(top_item_source)
+        if top_item_target != None:
+            top_item_target.setSelected(True)
+            target_tw.setCurrentItem(top_item_target)
 
 

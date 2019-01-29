@@ -19,14 +19,13 @@ class SensorChipAssay(QWidget):
 
     def init_widget(self):
         layout = QBoxLayout(QBoxLayout.LeftToRight, parent=self)
-        self.setLayout(layout)
 
         for i in range(6):
             temp_sensor = getattr(self, 'sensorchip_{}'.format(i))
             layout.addWidget(temp_sensor)
 
         self.gb.setLayout(layout)
-        layout.addWidget(self.gb)
+        # layout.addWidget(self.gb)
         self.setLayout(layout)
 
 
@@ -41,7 +40,7 @@ class SensorChip(QWidget):
         self.init_widget()
 
     def init_widget(self):
-        layout = QBoxLayout(QBoxLayout.TopToBottom, parent = self)
+        layout = QBoxLayout(QBoxLayout.TopToBottom, parent=self)
         grid_box = QGridLayout()
         for i in range(8):
             for j in range(2):

@@ -10,6 +10,8 @@ from PyQt5.QtCore import Qt
 
 from GUI import GUI_order
 from GUI import GUI_controller
+import GUI.GUI_controller
+
 
 
 SOURCE_LIST = []
@@ -19,6 +21,9 @@ SCALE = 1.5
 
 WORKSPACE_HEIGHT = 500 * SCALE
 WORKSPACE_WIDTH = 700 * SCALE
+WORKSPACE_SIDE_Z = 270 * SCALE
+
+DEPTH_SAMPLE = 50 * SCALE
 
 MARGIN = 80 * SCALE
 MIDBEDSIZE_HEIGHT = 93 * SCALE * 2
@@ -54,6 +59,8 @@ SENSOR_VIAL_DICT = {}
 GAP_ASSAY = 50 * SCALE
 
 A2 = 30 * SCALE
+A1 = 10 * SCALE
+WIDTH_LINK2 = 10 * SCALE
 
 WORKPOINT_DICT = {}
 WORKPROCESS_LIST = []
@@ -64,9 +71,14 @@ class Workspace(object):
     def __init__(self):
         self.workspace = np.zeros((int(WORKSPACE_HEIGHT), int(WORKSPACE_WIDTH), 3), np.uint8)
         self.workspace[:] = 255
-        self.height = self.workspace.shape[0] #row
-        self.width = self.workspace.shape[1] #col
-        # self.workspace = cv2.line(self.workspace, (100, 100), (500, 500), (255, 0, 0), 5)
+        self.height = self.workspace.shape[0] #row: Y
+        self.width = self.workspace.shape[1] #col: X
+
+        self.workspace_side = np.zeros((int(WORKSPACE_SIDE_Z), int(WORKSPACE_HEIGHT), 3), np.uint8)
+        self.workspace_side[:] = 255
+
+        self.height_side = self.workspace_side.shape[0] #row_side: Z
+        self.width_side = self.workspace_side.shape[1] #col_side: Y
 
         #MID BED
         mid_lefttop = (int(MARGIN), int(self.height - MARGIN - MIDBEDSIZE_HEIGHT))
@@ -141,18 +153,30 @@ class RoboticArm(Workspace):
     def __init__(self):
         super(RoboticArm, self).__init__()
 
+        side_point1 = (0, int(self.height_side - MARGIN - DEPTH_SAMPLE))
+        side_point2 = (self.width_side, int(self.height_side - MARGIN - DEPTH_SAMPLE))
+
+        side_bottom1 = (0, int(self.height_side - MARGIN))
+        side_bottom2 = (self.width_side, int(self.height_side - MARGIN))
+
+
+        side_link1_point1 = (0, int(self.height_side - MARGIN - DEPTH_SAMPLE - A1))
+        side_link1_point2 = (self.width_side, int(self.height_side - MARGIN - DEPTH_SAMPLE - A1))
+
+
+        cv2.line(self.workspace_side, side_bottom1, side_bottom2, (0, 0, 0), 5)
+        cv2.line(self.workspace_side, side_point1, side_point2, (0, 0, 0), 5)
+        cv2.line(self.workspace_side, side_link1_point1, side_link1_point2, (255, 0, 0), 30)
+
         link1_point1 = (int(WORKSPACE_WIDTH - MARGIN), int(MARGIN))
         link1_point2 = (int(WORKSPACE_WIDTH - MARGIN), int(WORKSPACE_HEIGHT - MARGIN))
         cv2.line(self.workspace, link1_point1, link1_point2, (255, 0, 0), 20) #B G R
 
         link2_point1 = (int(MARGIN), int(MARGIN))
         link2_point2 = (int(WORKSPACE_WIDTH - MARGIN), int(MARGIN))
-        # cv2.line(self.workspace, link2_point1, link2_point2, (0, 255, 0), 20)
 
         link3_point1 = (int(WORKSPACE_WIDTH - MARGIN), int(MARGIN))
         link3_point2 = (int(WORKSPACE_WIDTH - MARGIN), int(MARGIN + A2))
-        # cv2.line(self.workspace, link3_point1, link3_point2, (0, 0, 255), 20)
-        # cv2.circle(self.workspace, link3_point2, int(SENSOR_RADIUS), 10)
 
         self.p_start = [link3_point2[0], link3_point2[1]] #[x, y]
         self.SourceTargetToPoint()
@@ -185,14 +209,17 @@ class RoboticArm(Workspace):
 
     def visualization(self):
         p_start = self.p_start.copy()
-        link2_x1 = int(MARGIN)
-        link2_x2 = int(WORKSPACE_WIDTH - MARGIN)
+        link2_x1 = MARGIN
+        link2_x2 = WORKSPACE_WIDTH - MARGIN
 
-        work_y = int(MARGIN)
-        work_x = int(WORKSPACE_WIDTH - MARGIN)
+        work_y = MARGIN
+        work_x = WORKSPACE_WIDTH - MARGIN
 
         dstImg = self.workspace.copy()
+        sideImg = self.workspace_side.copy()
+
         amount = 0.0001
+        depth_step = DEPTH_SAMPLE / 5
         for worklist in WORKPROCESS_LIST: #[y, x] for worklist
             for i in range(len(worklist) - 1):
                 time.sleep(0.5 * amount)
@@ -203,42 +230,58 @@ class RoboticArm(Workspace):
                 x_step = x_movement / STEP
                 # time.sleep(amount * 0.2)
                 amount = worklist[2]
-
+                side_z = int(self.height_side - MARGIN - DEPTH_SAMPLE - 4 * A1)
+                side_z_link2 = int(self.height_side - MARGIN - DEPTH_SAMPLE - 2.6 * A1)
                 for j in range(STEP):
 
-                    work_y = int(work_y + y_step)
-                    work_x = int(work_x + x_step)
-                    link3_y1 = int(work_y)
-                    link3_y2 = int(work_y + A2)
+                    work_y = work_y + y_step
+                    work_x = work_x + x_step
+                    link3_y1 = work_y
+                    link3_y2 = work_y + A2
+                    link2_y1 = work_y
+                    link2_y2 = work_y + WIDTH_LINK2
 
-                    cv2.line(dstImg, (link2_x1, work_y), (link2_x2, work_y), (0, 255, 0), 20)
-                    cv2.line(dstImg, (work_x, link3_y1), (work_x, link3_y2), (0, 0, 255), 10)
-                    cv2.circle(dstImg, (work_x, link3_y2), int(SENSOR_RADIUS), 5)
+                    cv2.line(dstImg, (int(link2_x1), int(work_y)), (int(link2_x2), int(work_y)), (0, 255, 0), 20)
+                    cv2.line(dstImg, (int(work_x), int(link3_y1)), (int(work_x), int(link3_y2)), (0, 0, 255), 10)
+                    cv2.circle(dstImg, (int(work_x), int(link3_y2)), int(SENSOR_RADIUS), 5)
+
+                    cv2.line(sideImg, (int(link3_y1), side_z), (int(link3_y2), side_z), (0, 0, 255), 20)
+                    cv2.line(sideImg, (int(link2_y1), side_z_link2), (int(link2_y2), side_z_link2), (0, 255, 0), 20)
+
+                    if j == STEP - 9:
+                        cv2.circle(dstImg, (worklist[i][1], worklist[i][0]), int(SENSOR_RADIUS + 1), (50, 255, 255), -1)
+                    if j == STEP - 5:
+                        cv2.circle(dstImg, (worklist[i][1], worklist[i][0]), int(SENSOR_RADIUS + 1), (100, 100, 100), -1)
                     if j == STEP - 1:
                         cv2.circle(dstImg, (worklist[i][1], worklist[i][0]), int(SENSOR_RADIUS + 1), (255, 0, 0), -1)
-                    cv2.imshow("dstImg", dstImg)
+                        step = 0
+                        while True:
+                            step += 1
+                            cv2.line(sideImg, (int(link3_y2), side_z), (int(link3_y2), int(side_z + depth_step * step)), (0, 0, 0), 5)
+                            cv2.imshow("Side View", sideImg)
+                            if depth_step * step >= (DEPTH_SAMPLE + A2 / 2):
+                                break
+
+                    cv2.imshow("Top View", dstImg)
+                    cv2.imshow("Side View", sideImg)
                     dstImg = self.workspace.copy()
+                    sideImg = self.workspace_side.copy()
                     time.sleep(0.7)
 
                     cv2.waitKey(30)
 
         time.sleep(3)
-
-        BackToFirst()
+        exit()
 
 class BackToFirst(QWidget):
     def __init__(self):
         QWidget.__init__(self, flags=Qt.Widget)
-        self.windows = list()
+        self.gui_windows = list()
         self.back_to_first()
 
     def back_to_first(self):
-        app = QApplication(sys.argv)
-        window = GUI_controller.Controller()
-        self.windows.append(window)
-        GUI_controller.CHECKEDLIST = []
-        window.show()
-        exit(app.exec_())
+        app = QApplication('/home/jin/project/proteus/loop_main.py')
+        exit(app.exec())
 
 
 def main():

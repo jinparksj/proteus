@@ -27,7 +27,6 @@ class Bed(QWidget):
 
     def init_widget(self):
         layout = QBoxLayout(QBoxLayout.RightToLeft, parent=self)
-        self.setLayout(layout)
 
         # grid_box = QGridLayout()
 
@@ -36,7 +35,7 @@ class Bed(QWidget):
         layout.addWidget(self.mid)
 
         self.gb.setLayout(layout)
-        layout.addWidget(self.gb)
+        # layout.addWidget(self.gb)
         self.setLayout(layout)
 
 class Controller(QWidget):
@@ -55,10 +54,10 @@ class Controller(QWidget):
 
     def init_widget(self):
         self.setWindowTitle("Proteus Control GUI")
-        form_lbx = QBoxLayout(QBoxLayout.TopToBottom, parent=self)
-        bed_lbx = QBoxLayout(QBoxLayout.RightToLeft, parent = self)
-        sensor_lbx = QBoxLayout(QBoxLayout.LeftToRight, parent=self)
-        button_lbx = QBoxLayout(QBoxLayout.LeftToRight, parent=self)
+        form_lbx = QBoxLayout(QBoxLayout.TopToBottom)
+        bed_lbx = QBoxLayout(QBoxLayout.RightToLeft)
+        sensor_lbx = QBoxLayout(QBoxLayout.LeftToRight)
+        button_lbx = QBoxLayout(QBoxLayout.LeftToRight)
         self.setLayout(form_lbx)
 
         form_lbx.addWidget(self.instruction1)
@@ -127,6 +126,8 @@ def main():
     ctrl = Controller()
     ctrl.show()
     exit(app.exec())
+
+
 
 if __name__ == "__main__":
     main()
